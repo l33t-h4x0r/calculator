@@ -21,7 +21,7 @@ buttons.forEach((btn) => {
 });
 
 equals.addEventListener('click', () => {
-    displayContent = parse(displayContent);
+    displayContent = solveRPN(parse(displayContent));
     display.textContent = displayContent;
 })
 
@@ -30,7 +30,7 @@ clear.addEventListener('click', () => {
     display.textContent = displayContent;
 })
 
-function add(a, b) {return a + b;}
+function add(a, b) {return +a + +b;}
 function subtract(a, b) {return a - b;}
 function multiply(a, b) {return a * b;}
 function divide(a, b) {
@@ -39,8 +39,8 @@ function divide(a, b) {
 }
 
 // Shunting Yard algorithm
-// INPUT: space-separated infix expression
-// OUTPUT: space-separated postfix/RPN expression
+// INPUT: string space-separated infix expression
+// OUTPUT: array postfix expression
 // **note: as written, doesn't handle parentheses or exponents**
 function parse(str) {
 
@@ -69,8 +69,7 @@ function parse(str) {
     for(let j = stack.length-1; j >= 0; j--){
         queue.push(stack.pop());
     }
-
-    return queue.join(" ");
+    return queue;
 }
 
 function hasPrecedence(a, b){
@@ -80,6 +79,35 @@ function hasPrecedence(a, b){
     return true;
 }
 
+// INPUT: array postfix expression
+// OUTPUT: evaluated expression
 function solveRPN(arr){
+    let answer = [];
+    for(let i = 0; i < arr.length; i++){
+        if(!isNaN(arr[i])){
+            answer.push(arr[i]);
+        } else {
+            operand2 = answer.pop();
+            operand1 = answer.pop();
 
+            let func;
+            switch(arr[i]){
+                case "+":
+                    func = add;
+                    break;
+                case "-":
+                    func = subtract;
+                    break;
+                case "x":
+                    func = multiply;
+                    break;
+                case "/":
+                    if(operand2 == 0){return "ERROR: divide by 0 >:(";}
+                    func = divide;
+                    break;
+            }
+            answer.push(func(operand1, operand2));
+        }
+    }
+    return answer[0];
 }
