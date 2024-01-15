@@ -19,7 +19,7 @@
 .row {
     display: flex;
 }
-.num, .operator, .point, .equals, .clear {
+.num, .operator, .point, .equals, .clear, .delete {
     margin: 10px;
     padding: 10px;
     border: solid 2px black;

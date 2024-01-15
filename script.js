@@ -1,34 +1,109 @@
-
 let displayContent = "";
+let decimalPoint = false;
+let trailingOperator = true;
 
 
 const display = document.querySelector('#display');
-const buttons = document.querySelectorAll('.num, .operator, .point');
+const buttons = document.querySelectorAll('.num, .operator');
 const equals = document.querySelector('.equals');
 const clear = document.querySelector('.clear');
+const decimal = document.querySelector('.point');
+const del = document.querySelector('.delete'); // can't use delete as a var name lmao
+
 
 buttons.forEach((btn) => {
     btn.addEventListener('click', () => {
 
-        // adds spaces around operators for easier parsing
+        // if btn is an operator
         if(btn.getAttribute('class') == 'operator'){
-            displayContent += " " + btn.textContent + " ";
+            if(!trailingOperator){
+                displayContent += " " + btn.textContent + " ";
+                decimalPoint = false;
+                trailingOperator = true;
+            }
+        // if btn is a number
         } else {
             displayContent += btn.textContent;
+            trailingOperator = false;
         }
         display.textContent = displayContent;
     });
 });
 
+decimal.addEventListener('click', () => {
+    if(!decimalPoint){
+        displayContent += ".";
+        display.textContent = displayContent;
+        decimalPoint = true;
+    }
+})
+
 equals.addEventListener('click', () => {
-    displayContent = solveRPN(parse(displayContent));
-    display.textContent = displayContent;
+    if(!trailingOperator) {
+        displayContent = solveRPN(parse(displayContent));
+        display.textContent = displayContent;
+        decimalPoint = false;
+    }
+    console.log(typeof displayContent);
 })
 
 clear.addEventListener('click', () => {
     displayContent = "";
     display.textContent = displayContent;
+    decimalPoint = false;
+    trailingOperator = true;
 })
+
+del.addEventListener('click', () => {
+    const len = displayContent.length;
+    const char = displayContent.charAt(len-1);
+
+    // i.e. the last token is an operator
+    if(char == " "){
+        delOperator(len);
+    }
+    else if(char == "."){
+        delDecimal(len);
+    }
+    else if(!isNaN(char)){
+        delNumber(len);
+    }
+    display.textContent = displayContent;
+})
+
+
+
+function delOperator(len){
+    let arr = displayContent.split(" ");
+        // if the previous operand has a decimal
+        if(arr[arr.length - 3].indexOf(".") >= 0){
+            decimalPoint = true;
+        }
+        displayContent = displayContent.slice(0, len-3)
+        trailingOperator = false;
+}
+function delDecimal(len){
+    // if the decimal is the start of a number
+    if(displayContent.charAt(len-2) == " "){
+        trailingOperator = true;
+    }
+    decimalPoint = false;
+    displayContent = displayContent.slice(0, len-1)
+}
+function delNumber(len){
+        // if the number is the start of a number
+        if(displayContent.charAt(len-2) == " "){
+            trailingOperator = true;
+        }
+        // if the number is the first digit of a number
+        else if(displayContent.charAt(len-2) == "." 
+                && displayContent.charAt(len-3) == " "){
+            trailingOperator = true;
+        }
+        displayContent = displayContent.slice(0, len-1)
+}
+
+
 
 function add(a, b) {return +a + +b;}
 function subtract(a, b) {return a - b;}
@@ -80,7 +155,7 @@ function hasPrecedence(a, b){
 }
 
 // INPUT: array postfix expression
-// OUTPUT: evaluated expression
+// OUTPUT: evaluated string expression
 function solveRPN(arr){
     let answer = [];
     for(let i = 0; i < arr.length; i++){
@@ -109,5 +184,5 @@ function solveRPN(arr){
             answer.push(func(operand1, operand2));
         }
     }
-    return answer[0];
+    return answer[0].toString();
 }
