@@ -1,59 +1,98 @@
 let displayContent = "";
 let decimalPoint = false;
 let trailingOperator = true;
+let negative = false;
 
 
 const display = document.querySelector('#display');
-const buttons = document.querySelectorAll('.num, .operator');
+const numbers = document.querySelectorAll('.num');
+const operators = document.querySelectorAll('.operator');
 const equals = document.querySelector('.equals');
 const clear = document.querySelector('.clear');
 const decimal = document.querySelector('.point');
 const del = document.querySelector('.delete'); // can't use delete as a var name lmao
 
+// keyboard input ---------------------------------------------------
+document.addEventListener('keydown', (e) => {
+    let char = e.key;
+    console.log(char);
 
-buttons.forEach((btn) => {
-    btn.addEventListener('click', () => {
-
-        // if btn is an operator
-        if(btn.getAttribute('class') == 'operator'){
-            if(!trailingOperator){
-                displayContent += " " + btn.textContent + " ";
-                decimalPoint = false;
-                trailingOperator = true;
-            }
-        // if btn is a number
-        } else {
-            displayContent += btn.textContent;
-            trailingOperator = false;
+    if(!isNaN(char)){
+        displayContent += char;
+        trailingOperator = false;
+    }
+    if(char == "+" || char == "-" || char == "x" || char == "/"){
+        if(trailingOperator && !negative && !decimalPoint && char == "-"){
+            displayContent += "-";
+            negative = true;
         }
+        if(!trailingOperator){
+            displayContent += " " + char + " ";
+            decimalPoint = false;
+            trailingOperator = true;
+            negative = false;
+        }
+    }
+    if(char == "=" || char == "Enter"){
+        if(!trailingOperator) {
+            displayContent = solveRPN(parse(displayContent));
+            decimalPoint = false;
+        }
+    }
+    if(char == "."){
+        if(!decimalPoint){
+            displayContent += ".";
+            decimalPoint = true;
+        }
+    }
+    display.textContent = displayContent;
+
+})
+
+// click input ----------------------------------------------------
+numbers.forEach((btn) => {
+    btn.addEventListener('click', () => {
+        displayContent += btn.textContent;
+        trailingOperator = false;
         display.textContent = displayContent;
     });
 });
-
+operators.forEach((operator) => {
+    operator.addEventListener('click', () => {
+        if(trailingOperator && !negative && !decimalPoint && operator.textContent == "-"){
+            displayContent += "-";
+            negative = true;
+        }
+        if(!trailingOperator){
+            displayContent += " " + operator.textContent + " ";
+            decimalPoint = false;
+            trailingOperator = true;
+            negative = false;
+        }  
+        display.textContent = displayContent;
+    })
+});
 decimal.addEventListener('click', () => {
     if(!decimalPoint){
         displayContent += ".";
         display.textContent = displayContent;
         decimalPoint = true;
     }
-})
-
+});
 equals.addEventListener('click', () => {
     if(!trailingOperator) {
         displayContent = solveRPN(parse(displayContent));
         display.textContent = displayContent;
         decimalPoint = false;
     }
-    console.log(typeof displayContent);
-})
-
+});
 clear.addEventListener('click', () => {
     displayContent = "";
     display.textContent = displayContent;
     decimalPoint = false;
     trailingOperator = true;
-})
-
+    negative = false;
+});
 del.addEventListener('click', () => {
     const len = displayContent.length;
     const char = displayContent.charAt(len-1);
@@ -62,6 +101,9 @@ del.addEventListener('click', () => {
     if(char == " "){
         delOperator(len);
     }
+    else if(char == "-"){
+        delNegative(len);
+    }
     else if(char == "."){
         delDecimal(len);
     }
@@ -69,7 +111,7 @@ del.addEventListener('click', () => {
         delNumber(len);
     }
     display.textContent = displayContent;
-})
+});
 
 
 
@@ -83,24 +125,23 @@ function delOperator(len){
         trailingOperator = false;
 }
 function delDecimal(len){
-    // if the decimal is the start of a number
-    if(displayContent.charAt(len-2) == " "){
-        trailingOperator = true;
-    }
     decimalPoint = false;
     displayContent = displayContent.slice(0, len-1)
 }
 function delNumber(len){
-        // if the number is the start of a number
-        if(displayContent.charAt(len-2) == " "){
-            trailingOperator = true;
-        }
         // if the number is the first digit of a number
-        else if(displayContent.charAt(len-2) == "." 
-                && displayContent.charAt(len-3) == " "){
+        if(displayContent.charAt(len-2) == " "
+           || (displayContent.charAt(len-2) == "." &&
+                displayContent.charAt(len-3) == " "
+                || displayContent.charAt(len-3) == "-"))
+        {
             trailingOperator = true;
         }
         displayContent = displayContent.slice(0, len-1)
+}
+function delNegative(len){
+    negative = false;
+    displayContent = displayContent.slice(0, len-1)
 }
 
 
