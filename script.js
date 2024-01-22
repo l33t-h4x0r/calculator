@@ -3,7 +3,6 @@ let decimalPoint = false;
 let trailingOperator = true;
 let negative = false;
 
-
 const display = document.querySelector('#display');
 const numbers = document.querySelectorAll('.num');
 const operators = document.querySelectorAll('.operator');
@@ -13,87 +12,89 @@ const decimal = document.querySelector('.point');
 const del = document.querySelector('.delete'); // can't use delete as a var name lmao
 
 // keyboard input ---------------------------------------------------
+
 document.addEventListener('keydown', (e) => {
     let char = e.key;
-    console.log(char);
 
     if(!isNaN(char)){
-        displayContent += char;
-        trailingOperator = false;
+        clickNum(char);
     }
     if(char == "+" || char == "-" || char == "x" || char == "/"){
-        if(trailingOperator && !negative && !decimalPoint && char == "-"){
-            displayContent += "-";
-            negative = true;
-        }
-        if(!trailingOperator){
-            displayContent += " " + char + " ";
-            decimalPoint = false;
-            trailingOperator = true;
-            negative = false;
-        }
+       clickOperator(char);
     }
     if(char == "=" || char == "Enter"){
-        if(!trailingOperator) {
-            displayContent = solveRPN(parse(displayContent));
-            decimalPoint = false;
-        }
+        clickEquals();
     }
     if(char == "."){
-        if(!decimalPoint){
-            displayContent += ".";
-            decimalPoint = true;
-        }
+        clickDecimal();
     }
-    display.textContent = displayContent;
-
+    if(char == "Escape"){
+        clickClear();
+    }
+    if(char == "Backspace"){
+        clickDelete();
+    }
 })
 
 // click input ----------------------------------------------------
+
 numbers.forEach((btn) => {
     btn.addEventListener('click', () => {
-        displayContent += btn.textContent;
-        trailingOperator = false;
-        display.textContent = displayContent;
+        clickNum(btn.textContent);
     });
 });
 operators.forEach((operator) => {
     operator.addEventListener('click', () => {
-        if(trailingOperator && !negative && !decimalPoint && operator.textContent == "-"){
-            displayContent += "-";
-            negative = true;
-        }
-        if(!trailingOperator){
-            displayContent += " " + operator.textContent + " ";
-            decimalPoint = false;
-            trailingOperator = true;
-            negative = false;
-        }  
-        display.textContent = displayContent;
-    })
+        clickOperator(operator.textContent);
+    });
 });
-decimal.addEventListener('click', () => {
+decimal.addEventListener('click', clickDecimal);
+equals.addEventListener('click', clickEquals);
+clear.addEventListener('click', clickClear);
+del.addEventListener('click', clickDelete);
+
+// eventListener functions -----------------------------------------
+
+function clickNum(character){
+    displayContent += character;
+    trailingOperator = false;
+    display.textContent = displayContent;
+}
+function clickOperator(character){
+    if(trailingOperator && !negative && !decimalPoint && character == "-"){
+        displayContent += "-";
+        negative = true;
+    }
+    if(!trailingOperator){
+        displayContent += " " + character + " ";
+        decimalPoint = false;
+        trailingOperator = true;
+        negative = false;
+    }  
+    display.textContent = displayContent;
+}
+function clickDecimal(){
     if(!decimalPoint){
         displayContent += ".";
-        display.textContent = displayContent;
         decimalPoint = true;
+        display.textContent = displayContent;
     }
-});
-equals.addEventListener('click', () => {
+}
+function clickEquals(){
     if(!trailingOperator) {
         displayContent = solveRPN(parse(displayContent));
+        +displayContent >= 0 ? negative = false : negative = true;        
         display.textContent = displayContent;
-        decimalPoint = false;
     }
-});
-clear.addEventListener('click', () => {
+}
+function clickClear(){
     displayContent = "";
-    display.textContent = displayContent;
     decimalPoint = false;
     trailingOperator = true;
     negative = false;
-});
-del.addEventListener('click', () => {
+    display.textContent = displayContent;
+}
+function clickDelete(){
     const len = displayContent.length;
     const char = displayContent.charAt(len-1);
 
@@ -110,16 +111,23 @@ del.addEventListener('click', () => {
     else if(!isNaN(char)){
         delNumber(len);
     }
+    if(len == 1){
+        trailingOperator = true;
+    }
     display.textContent = displayContent;
-});
+}
 
-
+// delete functions ------------------------------------------------
 
 function delOperator(len){
     let arr = displayContent.split(" ");
         // if the previous operand has a decimal
         if(arr[arr.length - 3].indexOf(".") >= 0){
             decimalPoint = true;
+        }
+        // if the previous operand is negative
+        if(arr[arr.length - 3].indexOf("-") >= 0){
+            negative = true;
         }
         displayContent = displayContent.slice(0, len-3)
         trailingOperator = false;
@@ -129,15 +137,18 @@ function delDecimal(len){
     displayContent = displayContent.slice(0, len-1)
 }
 function delNumber(len){
-        // if the number is the first digit of a number
-        if(displayContent.charAt(len-2) == " "
-           || (displayContent.charAt(len-2) == "." &&
-                displayContent.charAt(len-3) == " "
-                || displayContent.charAt(len-3) == "-"))
-        {
-            trailingOperator = true;
-        }
-        displayContent = displayContent.slice(0, len-1)
+    const prev = displayContent.charAt(len-2);
+    const prev2 = displayContent.charAt(len-3);
+
+    // if the number is the first digit of a number
+    if(prev == " " || prev == "-")
+    {
+        trailingOperator = true;
+    }
+    if(prev == "." && (prev2 == "-" || prev2 == " ")){
+        trailingOperator = true;
+    }
+    displayContent = displayContent.slice(0, len-1)
 }
 function delNegative(len){
     negative = false;
