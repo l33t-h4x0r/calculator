@@ -7,7 +7,7 @@
     width: 300px;
     border: inset 10px black;
     padding: 10px;
-    background-color: rgb(181, 181, 181);
+    background-color: rgb(233, 180, 94);
     border-radius: 25px;
 }
 
@@ -37,13 +37,20 @@ button {
     font-size: 1em;
 }
 
-button:active{
+button:active {
     box-shadow: none;
     transform: translate(-3px, -3px);
 }
 .active {
     box-shadow: none;
     transform: translate(-3px, -3px);
+}
+
+.operator { 
+    background-color:rgb(251, 221, 172)
+}
+.delete, .clear {
+    background-color: rgb(168, 252, 252);
 }
 
 
