@@ -16,25 +16,54 @@ const del = document.querySelector('.delete'); // can't use delete as a var name
 document.addEventListener('keydown', (e) => {
     let char = e.key;
 
-    if(!isNaN(char)){
+    if(!isNaN(char) && char != " "){
         clickNum(char);
+        toggleActive(document.querySelector("#_"+char));
     }
     if(char == "+" || char == "-" || char == "x" || char == "/"){
-       clickOperator(char);
+        clickOperator(char);
+        switch(char){
+            case "+":
+                toggleActive(document.querySelector("#plus"));
+                break;
+            case "-":
+                toggleActive(document.querySelector("#minus"));
+                break;
+            case "x":
+                toggleActive(document.querySelector("#times"));
+                break;
+            case "/":
+                toggleActive(document.querySelector("#divide"));
+                break;
+       }
+
     }
     if(char == "=" || char == "Enter"){
-        clickEquals();
+        equals.click();
+        toggleActive(equals);
     }
     if(char == "."){
-        clickDecimal();
+        decimal.click();
+        toggleActive(decimal);
     }
     if(char == "Escape"){
-        clickClear();
+        clear.click();
+        toggleActive(clear);
     }
     if(char == "Backspace"){
-        clickDelete();
+        del.click();
+        toggleActive(del);
     }
 })
+
+// emulates behavior of the css ":active" pseudo-class,
+// since :active can't be modified using javascript  
+function toggleActive(elem){
+    elem.classList.add('active');
+    setTimeout(() => {
+        elem.classList.remove('active');
+    }, 200);
+}
 
 // click input ----------------------------------------------------
 
@@ -58,7 +87,7 @@ del.addEventListener('click', clickDelete);
 function clickNum(character){
     displayContent += character;
     trailingOperator = false;
-    display.textContent = displayContent;
+    display.textContent = displayContent.slice(-15);
 }
 function clickOperator(character){
     if(trailingOperator && !negative && !decimalPoint && character == "-"){
@@ -71,19 +100,20 @@ function clickOperator(character){
         trailingOperator = true;
         negative = false;
     }  
-    display.textContent = displayContent;
+    display.textContent = displayContent.slice(-15);
 }
 function clickDecimal(){
     if(!decimalPoint){
         displayContent += ".";
         decimalPoint = true;
-        display.textContent = displayContent;
+        display.textContent = displayContent.slice(-15);
     }
 }
 function clickEquals(){
     if(!trailingOperator) {
         displayContent = solveRPN(parse(displayContent));
-        +displayContent >= 0 ? negative = false : negative = true;        
+        +displayContent >= 0 ? negative = false : negative = true;
+        parseInt(displayContent) == +displayContent ? decimalPoint = false : decimalPoint = true;
         display.textContent = displayContent;
     }
 }
@@ -114,7 +144,7 @@ function clickDelete(){
     if(len == 1){
         trailingOperator = true;
     }
-    display.textContent = displayContent;
+    display.textContent = displayContent.slice(-15);
 }
 
 // delete functions ------------------------------------------------
@@ -166,7 +196,7 @@ function divide(a, b) {
 }
 
 // Shunting Yard algorithm
-// INPUT: string space-separated infix expression
+// INPUT: space-separated string infix expression
 // OUTPUT: array postfix expression
 // **note: as written, doesn't handle parentheses or exponents**
 function parse(str) {
